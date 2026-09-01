@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#18181b" />
+  <meta name="robots" content="noindex" />
+  <title>Painel · Pizzaria Delivery</title>
+
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: {
+        brand: { 50:"#fef2f1",100:"#fde0dd",200:"#fbc4bf",300:"#f79a91",400:"#f16457",500:"#e23b2e",600:"#c72c20",700:"#a5231a",800:"#88211a",900:"#71211c" },
+        charcoal: { 50:"#f7f7f8",100:"#eeeef0",200:"#d9d9de",300:"#b8b8c0",400:"#8f8f9c",500:"#6f6f7e",600:"#565664",700:"#434350",800:"#2c2c37",900:"#18181b" },
+      } } },
+    };
+  </script>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "firebase/app": "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js",
+      "firebase/firestore": "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js",
+      "firebase/auth": "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js"
+    }
+  }
+  </script>
+
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body class="bg-charcoal-50 text-charcoal-900 min-h-screen">
+
+  <!-- LOGIN -->
+  <section id="loginView" class="min-h-screen flex items-center justify-center px-4">
+    <div class="w-full max-w-sm bg-white rounded-2xl shadow-sm p-6">
+      <h1 class="text-xl font-extrabold text-center">Painel da Pizzaria</h1>
+      <p class="text-sm text-charcoal-500 text-center mt-1 mb-5">Acesso restrito à equipe.</p>
+      <form id="loginForm" class="space-y-3">
+        <input name="email" type="email" required placeholder="E-mail" autocomplete="username"
+          class="w-full rounded-xl border border-charcoal-200 py-3 px-3 text-sm" />
+        <input name="password" type="password" required placeholder="Senha" autocomplete="current-password"
+          class="w-full rounded-xl border border-charcoal-200 py-3 px-3 text-sm" />
+        <p id="loginError" class="text-sm text-red-600 min-h-[1.25rem]"></p>
+        <button type="submit" class="w-full h-12 rounded-xl bg-brand-600 text-white font-bold">Entrar</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- APP -->
+  <div id="appView" hidden>
+    <header class="bg-charcoal-900 text-white sticky top-0 z-40">
+      <div class="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
+        <h1 class="font-extrabold">🍕 Painel</h1>
+        <div class="flex items-center gap-3 text-sm">
+          <span id="adminEmail" class="text-charcoal-300 hidden sm:inline"></span>
+          <button id="logoutBtn" class="text-charcoal-200 underline">Sair</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-2xl mx-auto px-4 py-4 pb-28">
+      <!-- Pedidos -->
+      <section data-panel="orders">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="text-lg font-extrabold">Pedidos</h2>
+        </div>
+        <p id="ordersSummary" class="text-xs text-charcoal-500 mb-3"></p>
+        <div id="ordersControls" class="flex flex-wrap items-center gap-2 mb-4"></div>
+        <div id="ordersRoot" class="space-y-3"></div>
+      </section>
+
+      <!-- Cardápio -->
+      <section data-panel="products" hidden>
+        <h2 class="text-lg font-extrabold mb-3">Cardápio</h2>
+
+        <div class="bg-white rounded-2xl p-4 mb-3">
+          <div class="flex items-center justify-between mb-1">
+            <h3 class="font-bold">Categorias</h3>
+            <button id="addCategoryBtn" class="text-sm font-bold text-brand-600">+ Nova</button>
+          </div>
+          <div id="categoriesList"></div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 mb-3">
+          <div class="flex items-center justify-between mb-1">
+            <h3 class="font-bold">Produtos</h3>
+            <button id="addProductBtn" class="text-sm font-bold text-brand-600">+ Novo</button>
+          </div>
+          <div id="productsList"></div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4">
+          <div class="flex items-center justify-between mb-1">
+            <h3 class="font-bold">Bordas & Adicionais</h3>
+            <button id="addAddonBtn" class="text-sm font-bold text-brand-600">+ Novo</button>
+          </div>
+          <div id="addonsList"></div>
+        </div>
+      </section>
+
+      <!-- Configurações -->
+      <section data-panel="settings" hidden>
+        <h2 class="text-lg font-extrabold mb-3">Configurações</h2>
+        <div id="settingsForm" class="bg-white rounded-2xl p-4"></div>
+        <button id="seedBtn" class="w-full mt-4 h-11 rounded-xl bg-charcoal-100 text-charcoal-600 text-sm font-semibold">
+          Importar cardápio de exemplo
+        </button>
+      </section>
+
+      <!-- Cupons -->
+      <section data-panel="coupons" hidden>
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="text-lg font-extrabold">Cupons</h2>
+          <button id="addCouponBtn" class="text-sm font-bold text-brand-600">+ Novo cupom</button>
+        </div>
+        <div id="couponsList" class="bg-white rounded-2xl p-4"></div>
+      </section>
+    </main>
+
+    <!-- Tab bar -->
+    <nav class="fixed bottom-0 inset-x-0 bg-white border-t border-charcoal-200 z-40" style="padding-bottom:env(safe-area-inset-bottom)">
+      <div class="max-w-2xl mx-auto grid grid-cols-4">
+        <button data-tab="orders" class="py-2.5 flex flex-col items-center gap-0.5 text-xs font-semibold text-charcoal-400">
+          <span class="tab-dot w-1.5 h-1.5 rounded-full bg-transparent"></span>🧾<span>Pedidos</span>
+        </button>
+        <button data-tab="products" class="py-2.5 flex flex-col items-center gap-0.5 text-xs font-semibold text-charcoal-400">
+          <span class="tab-dot w-1.5 h-1.5 rounded-full bg-transparent"></span>🍕<span>Cardápio</span>
+        </button>
+        <button data-tab="coupons" class="py-2.5 flex flex-col items-center gap-0.5 text-xs font-semibold text-charcoal-400">
+          <span class="tab-dot w-1.5 h-1.5 rounded-full bg-transparent"></span>🎟️<span>Cupons</span>
+        </button>
+        <button data-tab="settings" class="py-2.5 flex flex-col items-center gap-0.5 text-xs font-semibold text-charcoal-400">
+          <span class="tab-dot w-1.5 h-1.5 rounded-full bg-transparent"></span>⚙️<span>Config</span>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <div id="print-receipt" aria-hidden="true"></div>
+
+  <script type="module" src="js/admin/dashboard.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "pizzariadelivery",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cardápio digital + painel administrativo para pizzaria — mobile-first, 100% Firebase serverless.",
+  "type": "module",
+  "scripts": {
+    "dev": "firebase emulators:start --only auth,firestore,hosting",
+    "serve": "firebase serve --only hosting",
+    "deploy": "firebase deploy",
+    "deploy:hosting": "firebase deploy --only hosting",
+    "deploy:rules": "firebase deploy --only firestore:rules,firestore:indexes"
+  },
+  "devDependencies": {
+    "firebase-tools": "^13.0.0"
+  }
+}

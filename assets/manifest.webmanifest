@@ -1,0 +1,12 @@
+{
+  "name": "Pizzaria Delivery",
+  "short_name": "Pizzaria",
+  "description": "Cardápio digital da pizzaria",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f7f8",
+  "theme_color": "#e23b2e",
+  "icons": [
+    { "src": "/assets/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
