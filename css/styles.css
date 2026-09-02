@@ -55,6 +55,11 @@
 
 * { -webkit-tap-highlight-color: transparent; }
 
+/* O atributo [hidden] precisa vencer as utilitárias de display do Tailwind
+   (.flex, .grid, .block…) — sem isto, `el.hidden = true` não esconde um
+   container que também tem `class="flex"` (ex.: #loginView do painel). */
+[hidden] { display: none !important; }
+
 html { scroll-behavior: smooth; }
 
 body {
