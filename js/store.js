@@ -95,10 +95,53 @@ export const pizzaFlavors = () =>
 export const borders = () => state.addons.filter((a) => a.group === "borda");
 export const extras = () => state.addons.filter((a) => a.group === "extra");
 
-/** Preço de um produto pizza para um tamanho. */
+/** Preço de tabela (base) de um produto pizza para um tamanho. */
 export function pizzaPrice(product, size) {
   return Number(product?.prices?.[size] ?? 0);
 }
+
+/**
+ * Resolve preço de tabela x preço promocional.
+ * @returns {{ base:number, price:number, hasPromo:boolean, percent:number }}
+ */
+function resolvePromo(base, promo) {
+  base = Number(base) || 0;
+  promo = Number(promo) || 0;
+  const hasPromo = promo > 0 && promo < base;
+  const price = hasPromo ? promo : base;
+  const percent = hasPromo ? Math.round((1 - promo / base) * 100) : 0;
+  return { base, price, hasPromo, percent };
+}
+
+/** Preço efetivo de um produto simples (considera promoPrice/promoActive). */
+export function effectivePrice(product) {
+  const promo = product?.promoActive ? product?.promoPrice : 0;
+  return resolvePromo(product?.price, promo);
+}
+
+/** Preço efetivo de uma pizza num tamanho (considera promoPrices/promoActive). */
+export function pizzaEffectivePrice(product, size) {
+  const promo = product?.promoActive ? product?.promoPrices?.[size] : 0;
+  return resolvePromo(product?.prices?.[size], promo);
+}
+
+/** Menor preço efetivo entre os tamanhos disponíveis de uma pizza. */
+export function pizzaFromPrice(product) {
+  const vals = SIZES
+    .map((s) => pizzaEffectivePrice(product, s).price)
+    .filter((n) => n > 0);
+  return vals.length ? Math.min(...vals) : 0;
+}
+
+/** Indica se o produto tem promoção ativa em qualquer preço. */
+export function hasActivePromo(product) {
+  if (!product?.promoActive) return false;
+  if (product.type === "pizza") return SIZES.some((s) => pizzaEffectivePrice(product, s).hasPromo);
+  return effectivePrice(product).hasPromo;
+}
+
+/** Produtos com promoção ativa (para a seção "Promoções da Casa"). */
+export const promoProducts = () => state.products.filter(hasActivePromo);
 
 // ---- Status da loja ---------------------------------------------------
 

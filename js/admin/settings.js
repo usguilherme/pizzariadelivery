@@ -47,8 +47,8 @@ function render() {
     const h = s.hours?.[key] || { enabled: false, open: "18:00", close: "23:00" };
     const en = el("input", { type: "checkbox", class: "w-4 h-4 accent-brand-600" });
     en.checked = h.enabled !== false;
-    const open = el("input", { type: "time", value: h.open || "18:00", class: "rounded-lg border border-charcoal-200 px-2 py-1 text-sm" });
-    const close = el("input", { type: "time", value: h.close || "23:00", class: "rounded-lg border border-charcoal-200 px-2 py-1 text-sm" });
+    const open = el("input", { type: "time", value: h.open || "18:00", class: "field-inline" });
+    const close = el("input", { type: "time", value: h.close || "23:00", class: "field-inline" });
     hourInputs[key] = { en, open, close };
     hoursBox.append(el("div", { class: "flex items-center gap-2" }, [
       el("label", { class: "flex items-center gap-1.5 w-24 text-sm" }, [en, label]),
@@ -62,8 +62,8 @@ function render() {
   const renderFees = () => {
     feesBox.innerHTML = "";
     fees.forEach((f, i) => {
-      const nb = el("input", { value: f.neighborhood || "", placeholder: "Bairro", class: "flex-1 rounded-lg border border-charcoal-200 px-2 py-1.5 text-sm" });
-      const fee = el("input", { value: f.fee ?? "", placeholder: "R$", inputmode: "decimal", class: "w-20 rounded-lg border border-charcoal-200 px-2 py-1.5 text-sm" });
+      const nb = el("input", { value: f.neighborhood || "", placeholder: "Bairro", class: "field-inline flex-1" });
+      const fee = el("input", { value: f.fee ?? "", placeholder: "R$", inputmode: "decimal", class: "field-inline w-20 shrink-0" });
       nb.oninput = () => (fees[i].neighborhood = nb.value);
       fee.oninput = () => (fees[i].fee = parseMoney(fee.value));
       feesBox.append(el("div", { class: "flex gap-2" }, [
@@ -84,7 +84,7 @@ function render() {
     grp("Operação", [openManual.node, pickup.node, eta.node, minOrder.node, halfRule.node]),
     grp("Horário de funcionamento", [hoursBox]),
     grp("Taxas de entrega", [defFee.node, el("p", { class: "text-xs text-charcoal-400" }, "Taxas específicas por bairro (sobrepõem a padrão):"), feesBox]),
-    el("button", { type: "submit", class: "w-full h-12 rounded-xl bg-brand-600 text-white font-bold" }, "Salvar configurações"),
+    el("button", { type: "submit", class: "btn btn-primary btn-block" }, "Salvar configurações"),
   ]);
 
   form.onsubmit = async (e) => {
@@ -118,25 +118,25 @@ function render() {
 
 // ---- widgets -----------------------------------------------
 function field(label, value, attrs = {}) {
-  const inp = el("input", { class: "w-full rounded-xl border border-charcoal-200 py-2.5 px-3 text-sm", value: value ?? "", ...attrs });
+  const inp = el("input", { class: "field", value: value ?? "", ...attrs });
   return { node: wrap(label, inp), value: () => inp.value };
 }
 function selectField(label, opts, selected) {
-  const sel = el("select", { class: "w-full rounded-xl border border-charcoal-200 py-2.5 px-3 text-sm bg-white" });
+  const sel = el("select", { class: "field" });
   for (const [v, l] of opts) { const o = el("option", { value: v }, l); if (v === selected) o.selected = true; sel.append(o); }
   return { node: wrap(label, sel), value: () => sel.value };
 }
 function toggle(label, checked) {
-  const inp = el("input", { type: "checkbox", class: "w-5 h-5 accent-brand-600" });
+  const inp = el("input", { type: "checkbox", class: "switch" });
   inp.checked = !!checked;
-  return { node: el("label", { class: "flex items-center justify-between py-1" }, [el("span", { class: "text-sm text-charcoal-700" }, label), inp]), value: () => inp.checked };
+  return { node: el("label", { class: "toggle-row cursor-pointer" }, [el("span", {}, label), inp]), value: () => inp.checked };
 }
 function wrap(label, control) {
-  return el("label", { class: "block" }, [el("span", { class: "text-xs font-semibold text-charcoal-500 mb-1 block" }, label), control]);
+  return el("label", { class: "block" }, [el("span", { class: "field-label" }, label), control]);
 }
 function grp(title, children) {
-  return el("fieldset", { class: "space-y-2 border border-charcoal-100 rounded-2xl p-3" }, [
-    el("legend", { class: "text-sm font-bold text-charcoal-800 px-1" }, title),
+  return el("fieldset", { class: "fieldset space-y-2" }, [
+    el("legend", {}, title),
     ...children,
   ]);
 }

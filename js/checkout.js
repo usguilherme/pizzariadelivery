@@ -2,7 +2,7 @@
 // checkout.js — barra de carrinho flutuante, revisão do carrinho e checkout
 // ============================================================================
 
-import { $, el, openSheet, toast, formatBRL, confirmSheet, escapeHtml } from "./ui.js";
+import { $, el, openSheet, toast, formatBRL, confirmSheet, segmented, mediaFallback, icon } from "./ui.js";
 import {
   state, storeStatus, deliveryFeeFor, neighborhoods,
 } from "./store.js";
@@ -18,47 +18,62 @@ let applied = null; // { coupon, discount, code }
 // ---- Barra flutuante ------------------------------------------------
 export function initCartBar() {
   const bar = $("#cartBar");
+  const iconBtn = $("#cartIconBtn");
+  const iconCount = $("#cartIconCount");
   if (!bar) return;
+
   cart.onCartChange(() => {
     const n = cart.count();
+    if (iconCount) {
+      iconCount.textContent = String(n);
+      iconCount.classList.toggle("hidden", n === 0);
+    }
     if (n === 0) {
       bar.classList.add("translate-y-24");
       return;
     }
     bar.classList.remove("translate-y-24");
-    $("#cartBarCount").textContent = `${n} ${n === 1 ? "item" : "itens"}`;
+    $("#cartBarCount").textContent = String(n);
     $("#cartBarTotal").textContent = formatBRL(cart.subtotal());
   });
+
   bar.querySelector("button").addEventListener("click", openCart);
+  iconBtn?.addEventListener("click", () => { if (!cart.isEmpty()) openCart(); });
 }
 
 // ---- Revisão do carrinho ------------------------------------------
 export function openCart() {
   if (cart.isEmpty()) return toast("Seu carrinho está vazio.", "warn");
   const wrap = el("div", { class: "space-y-4" });
-  const list = el("div", { class: "space-y-3" });
-  const totalRow = el("div", { class: "flex justify-between font-bold text-lg pt-2 border-t border-charcoal-100" });
+  const list = el("div", { class: "space-y-2.5" });
+  const totalRow = el("div", { class: "flex justify-between items-baseline pt-3 border-t border-charcoal-200" });
 
   function render() {
     list.innerHTML = "";
     for (const it of cart.getItems()) {
-      list.append(el("div", { class: "flex gap-3 items-start" }, [
-        el("div", { class: "flex-1" }, [
-          el("p", { class: "font-semibold text-charcoal-900 text-sm" }, it.name),
-          it.border ? el("p", { class: "text-xs text-charcoal-500" }, `Borda: ${it.border.name}`) : null,
-          it.extras?.length ? el("p", { class: "text-xs text-charcoal-500" }, `Adicionais: ${it.extras.map((e) => e.name).join(", ")}`) : null,
-          it.notes ? el("p", { class: "text-xs text-charcoal-400 italic" }, it.notes) : null,
-          el("p", { class: "text-sm font-bold text-brand-700 mt-0.5" }, formatBRL(it.lineTotal)),
+      list.append(el("div", { class: "card p-2.5 flex gap-2.5 items-center" }, [
+        el("div", { class: "w-14 h-14 rounded-xl overflow-hidden shrink-0 relative bg-charcoal-100" }, [
+          mediaFallback(it.type === "pizza" ? "🍕" : it.name),
         ]),
-        el("div", { class: "flex items-center gap-1 border border-charcoal-200 rounded-lg" }, [
-          el("button", { class: "w-8 h-8 font-bold text-charcoal-500", onclick: () => { cart.dec(it.uid); render(); } }, "−"),
-          el("span", { class: "w-6 text-center text-sm font-bold" }, String(it.qty)),
-          el("button", { class: "w-8 h-8 font-bold text-charcoal-500", onclick: () => { cart.inc(it.uid); render(); } }, "+"),
+        el("div", { class: "flex-1 min-w-0" }, [
+          el("p", { class: "font-semibold text-charcoal-900 text-sm line-clamp-1" }, it.name),
+          it.border ? el("p", { class: "text-[11px] text-charcoal-500" }, `Borda: ${it.border.name}`) : null,
+          it.extras?.length ? el("p", { class: "text-[11px] text-charcoal-500 line-clamp-1" }, `+ ${it.extras.map((e) => e.name).join(", ")}`) : null,
+          it.notes ? el("p", { class: "text-[11px] text-charcoal-400 italic line-clamp-1" }, it.notes) : null,
+          el("p", { class: "text-sm font-extrabold text-brand-700 mt-0.5" }, formatBRL(it.lineTotal)),
+        ]),
+        el("div", { class: "qty" }, [
+          el("button", { type: "button", onclick: () => { cart.dec(it.uid); render(); } }, "−"),
+          el("span", {}, String(it.qty)),
+          el("button", { type: "button", onclick: () => { cart.inc(it.uid); render(); } }, "+"),
         ]),
       ]));
     }
     totalRow.innerHTML = "";
-    totalRow.append(el("span", {}, "Subtotal"), el("span", {}, formatBRL(cart.subtotal())));
+    totalRow.append(
+      el("span", { class: "text-sm text-charcoal-500 font-semibold" }, "Subtotal"),
+      el("span", { class: "font-display text-xl font-extrabold" }, formatBRL(cart.subtotal())),
+    );
     if (cart.isEmpty()) sheet.close();
   }
 
@@ -67,12 +82,14 @@ export function openCart() {
     list,
     totalRow,
     el("button", {
-      class: "w-full h-12 rounded-xl bg-brand-600 text-white font-bold",
+      type: "button",
+      class: "btn btn-primary btn-block btn-lg",
       onclick: () => { sheet.close(); openCheckout(); },
     }, "Continuar para entrega"),
     el("button", {
-      class: "w-full h-10 text-sm text-charcoal-500 font-medium",
-      onclick: async () => { if (await confirmSheet("Esvaziar o carrinho?")) { cart.clear(); sheet.close(); } },
+      type: "button",
+      class: "btn btn-ghost btn-block btn-sm",
+      onclick: async () => { if (await confirmSheet("Esvaziar o carrinho?", { danger: true, okText: "Esvaziar" })) { cart.clear(); sheet.close(); } },
     }, "Esvaziar carrinho"),
   );
   const sheet = openSheet(wrap, { title: "Seu pedido" });
@@ -86,9 +103,8 @@ export function openCheckout() {
 
   const form = el("form", { class: "space-y-5", novalidate: true });
 
-  // Aviso de loja fechada
   if (!st.open) {
-    form.append(el("div", { class: "bg-red-50 text-red-700 text-sm font-medium rounded-xl p-3" },
+    form.append(el("div", { class: "text-sm font-semibold rounded-xl p-3 bg-red-50 text-red-700" },
       `A loja está fechada (${st.reason}). Não é possível finalizar pedidos agora.`));
   }
 
@@ -99,7 +115,6 @@ export function openCheckout() {
 
   // -- Entrega x Retirada --
   let fulfillment = s.pickupEnabled ? (saved.fulfillment || "delivery") : "delivery";
-  const fulRow = el("div", { class: "grid grid-cols-2 gap-2" });
   const addrBox = el("div", { class: "space-y-3" });
 
   const street = field("Rua / Av.", "text", { required: true, value: saved.address?.street });
@@ -109,64 +124,49 @@ export function openCheckout() {
   const reference = field("Referência", "text", { value: saved.address?.reference, placeholder: "Perto de…" });
   addrBox.append(street.node, el("div", { class: "grid grid-cols-2 gap-2" }, [number.node, district.node]), complement.node, reference.node);
 
-  const renderFul = () => {
-    fulRow.innerHTML = "";
-    const opts = [["delivery", "🛵 Entrega"]];
-    if (s.pickupEnabled) opts.push(["pickup", "🏪 Retirada"]);
-    for (const [val, label] of opts) {
-      const active = fulfillment === val;
-      fulRow.append(el("button", {
-        type: "button",
-        class: `py-2.5 rounded-xl border text-sm font-semibold ${active ? "border-brand-600 bg-brand-50 text-brand-700" : "border-charcoal-200 text-charcoal-600"}`,
-        onclick: () => { fulfillment = val; renderFul(); addrBox.hidden = val !== "delivery"; recalc(); },
-      }, label));
-    }
-    addrBox.hidden = fulfillment !== "delivery";
-  };
-  renderFul();
-  form.append(group("Como você quer receber?", [fulRow, addrBox]));
+  const fulOpts = [["delivery", "Entrega", "🛵"]];
+  if (s.pickupEnabled) fulOpts.push(["pickup", "Retirada", "🏪"]);
+  const fulCtl = segmented(fulOpts, fulfillment, (val) => {
+    fulfillment = val;
+    addrBox.hidden = val !== "delivery";
+    recalc();
+  });
+  addrBox.hidden = fulfillment !== "delivery";
+  form.append(group("Como você quer receber?", [fulCtl.node, addrBox]));
 
   // -- Pagamento --
   let payMethod = saved.payMethod || "pix";
-  const payRow = el("div", { class: "grid grid-cols-3 gap-2" });
   const changeField = field("Troco para", "text", { placeholder: "R$", inputmode: "decimal" });
   changeField.node.hidden = true;
-  const renderPay = () => {
-    payRow.innerHTML = "";
-    for (const [val, label] of [["pix", "PIX"], ["card", "Cartão"], ["cash", "Dinheiro"]]) {
-      const active = payMethod === val;
-      payRow.append(el("button", {
-        type: "button",
-        class: `py-2.5 rounded-xl border text-sm font-semibold ${active ? "border-brand-600 bg-brand-50 text-brand-700" : "border-charcoal-200 text-charcoal-600"}`,
-        onclick: () => { payMethod = val; renderPay(); changeField.node.hidden = val !== "cash"; },
-      }, label));
-    }
-  };
-  renderPay();
+  const payCtl = segmented(
+    [["pix", "PIX", "⚡"], ["card", "Cartão", "💳"], ["cash", "Dinheiro", "💵"]],
+    payMethod,
+    (val) => { payMethod = val; changeField.node.hidden = val !== "cash"; },
+  );
   const pixHint = s.pixKey ? el("p", { class: "text-xs text-charcoal-500" }, `Chave PIX: ${s.pixKey}${s.pixName ? " (" + s.pixName + ")" : ""}`) : null;
-  form.append(group("Pagamento", [payRow, changeField.node, pixHint].filter(Boolean)));
+  form.append(group("Pagamento", [payCtl.node, changeField.node, pixHint].filter(Boolean)));
 
   // -- Cupom --
   const couponInput = field("Cupom de desconto", "text", { placeholder: "Opcional", autocapitalize: "characters" });
-  const couponMsg = el("p", { class: "text-xs font-medium" });
+  const couponMsg = el("p", { class: "text-xs font-semibold" });
   const couponBtn = el("button", {
-    type: "button", class: "px-4 rounded-xl bg-charcoal-100 font-semibold text-sm shrink-0",
+    type: "button", class: "btn btn-outline btn-sm shrink-0 px-4",
     onclick: async () => {
       const r = await validateCoupon(couponInput.input.value, cart.subtotal());
       applied = r.ok ? { ...r, code: r.coupon.code } : null;
       couponMsg.textContent = r.message || "";
-      couponMsg.className = `text-xs font-medium ${r.ok ? "text-emerald-600" : "text-red-600"}`;
+      couponMsg.className = `text-xs font-semibold ${r.ok ? "text-emerald-600" : "text-red-600"}`;
       recalc();
     },
   }, "Aplicar");
   form.append(group("Cupom", [
-    el("div", { class: "flex gap-2" }, [couponInput.node, couponBtn]),
+    el("div", { class: "flex gap-2 items-end" }, [couponInput.node, couponBtn]),
     couponMsg,
   ]));
 
   // -- Observações --
   const notes = el("textarea", {
-    class: "w-full rounded-xl border border-charcoal-200 py-2 px-3 text-sm resize-none", rows: "2",
+    class: "field", rows: "2",
     placeholder: "Alguma observação para a cozinha ou entrega?",
   });
   form.append(group("Observações", [notes]));
@@ -176,13 +176,18 @@ export function openCheckout() {
   const sumFee = sumLine("Taxa de entrega");
   const sumDisc = sumLine("Desconto");
   const sumTotal = sumLine("Total", true);
-  const minWarn = el("p", { class: "text-xs text-amber-600 font-medium" });
-  form.append(el("div", { class: "space-y-1 pt-3 border-t border-charcoal-100" }, [sumSub.node, sumFee.node, sumDisc.node, sumTotal.node, minWarn]));
+  const minWarn = el("p", { class: "text-xs text-amber-600 font-semibold" });
+  form.append(el("div", { class: "card card-pop p-4 space-y-1.5" }, [
+    el("p", { class: "field-label mb-1" }, "Resumo"),
+    sumSub.node, sumFee.node, sumDisc.node,
+    el("hr", { class: "divider my-1" }),
+    sumTotal.node, minWarn,
+  ]));
 
   // -- Botão enviar --
   const submitBtn = el("button", {
     type: "submit",
-    class: "w-full h-13 py-3.5 rounded-xl bg-brand-600 text-white font-bold text-base disabled:opacity-50",
+    class: "btn btn-primary btn-block btn-lg",
   }, "Enviar pedido pelo WhatsApp");
   form.append(submitBtn);
   form.append(el("p", { class: "text-[11px] text-center text-charcoal-400" },
@@ -284,29 +289,28 @@ export function openCheckout() {
 }
 
 function openSuccess(code, waUrl) {
-  const wrap = el("div", { class: "text-center space-y-4 py-2" });
+  const wrap = el("div", { class: "text-center space-y-4 py-3" });
   wrap.append(
-    el("div", { class: "text-5xl" }, "✅"),
-    el("h3", { class: "text-xl font-extrabold text-charcoal-900" }, `Pedido #${code} registrado!`),
+    el("div", { class: "mx-auto w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 grid place-items-center", html: icon("check", "w-8 h-8") }),
+    el("h3", { class: "font-display text-xl font-extrabold text-charcoal-900" }, `Pedido #${code} registrado!`),
     el("p", { class: "text-sm text-charcoal-500" }, "Toque abaixo para abrir o WhatsApp e confirmar com a pizzaria."),
     el("a", {
       href: waUrl, target: "_blank", rel: "noopener",
-      class: "block w-full h-12 leading-[3rem] rounded-xl bg-emerald-600 text-white font-bold",
+      class: "btn btn-success btn-block btn-lg",
     }, "Abrir WhatsApp"),
   );
-  const sheet = openSheet(wrap, { title: "Tudo certo!" });
-  // tenta abrir automaticamente
+  openSheet(wrap, { title: "Tudo certo! 🎉" });
   window.open(waUrl, "_blank", "noopener");
 }
 
 // ---- helpers de formulário ---------------------------------------
 function field(label, type, attrs = {}) {
   const input = el("input", {
-    type, class: "w-full rounded-xl border border-charcoal-200 py-2.5 px-3 text-sm focus:border-brand-500 outline-none",
+    type, class: "field",
     ...attrs, value: attrs.value || "",
   });
   const node = el("label", { class: "block flex-1" }, [
-    el("span", { class: "text-xs font-semibold text-charcoal-500 mb-1 block" }, label + (attrs.required ? " *" : "")),
+    el("span", { class: "field-label" }, label + (attrs.required ? " *" : "")),
     input,
   ]);
   return { node, input };
@@ -315,17 +319,16 @@ function field(label, type, attrs = {}) {
 function districtField(value) {
   const hoods = neighborhoods();
   if (hoods.length) {
-    const input = el("select", {
-      class: "w-full rounded-xl border border-charcoal-200 py-2.5 px-3 text-sm bg-white", required: true,
-    });
+    const input = el("select", { class: "field", required: true });
     input.append(el("option", { value: "" }, "Selecione o bairro"));
     for (const h of hoods) {
-      const o = el("option", { value: h }, h);
+      const fee = deliveryFeeFor(h, state.settings);
+      const o = el("option", { value: h }, `${h}${fee > 0 ? ` · ${formatBRL(fee)}` : ""}`);
       if (h === value) o.selected = true;
       input.append(o);
     }
     const node = el("label", { class: "block" }, [
-      el("span", { class: "text-xs font-semibold text-charcoal-500 mb-1 block" }, "Bairro *"),
+      el("span", { class: "field-label" }, "Bairro *"),
       input,
     ]);
     return { node, input };
@@ -335,15 +338,15 @@ function districtField(value) {
 
 function group(title, children) {
   return el("div", { class: "space-y-2" }, [
-    el("span", { class: "text-sm font-bold text-charcoal-800 block" }, title),
+    el("span", { class: "font-display text-sm font-bold text-charcoal-800 block" }, title),
     ...children,
   ]);
 }
 
 function sumLine(label, strong = false) {
-  const val = el("span", { class: strong ? "font-extrabold text-lg" : "" }, "");
-  const node = el("div", { class: `flex justify-between text-sm ${strong ? "text-charcoal-900 pt-1" : "text-charcoal-600"}` }, [
-    el("span", { class: strong ? "font-extrabold text-lg" : "" }, label),
+  const val = el("span", { class: strong ? "font-display font-extrabold text-lg" : "text-sm font-semibold" }, "");
+  const node = el("div", { class: `flex justify-between items-baseline ${strong ? "text-charcoal-900" : "text-charcoal-600"}` }, [
+    el("span", { class: strong ? "font-display font-extrabold text-lg" : "text-sm" }, label),
     val,
   ]);
   return { node, set: (t) => (val.textContent = t) };

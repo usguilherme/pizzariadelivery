@@ -3,19 +3,34 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#18181b" />
+  <meta name="theme-color" content="#1a1613" />
   <meta name="robots" content="noindex" />
   <title>Painel · Pizzaria Delivery</title>
 
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" />
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      theme: { extend: { colors: {
-        brand: { 50:"#fef2f1",100:"#fde0dd",200:"#fbc4bf",300:"#f79a91",400:"#f16457",500:"#e23b2e",600:"#c72c20",700:"#a5231a",800:"#88211a",900:"#71211c" },
-        charcoal: { 50:"#f7f7f8",100:"#eeeef0",200:"#d9d9de",300:"#b8b8c0",400:"#8f8f9c",500:"#6f6f7e",600:"#565664",700:"#434350",800:"#2c2c37",900:"#18181b" },
-      } } },
+      theme: { extend: {
+        colors: {
+          brand:  { 50:"#fdecea",100:"#fbd5d0",200:"#f6aba2",300:"#f07e70",400:"#ee5647",500:"#e8291c",600:"#d0231a",700:"#c71f14",800:"#a21910",900:"#7e140c" },
+          accent: { 50:"#fff1e5",100:"#ffe1c7",400:"#ff9040",500:"#ff7a1a",600:"#e86a0f" },
+          charcoal:{ 50:"#f7f6f4",100:"#f1efec",200:"#e9e5df",300:"#d6cfc5",400:"#9c9389",500:"#6b6259",600:"#544c44",700:"#3d372f",800:"#2a251f",900:"#1a1613" },
+        },
+        fontFamily: {
+          sans: ["Inter","ui-sans-serif","system-ui","sans-serif"],
+          display: ["Poppins","ui-sans-serif","system-ui","sans-serif"],
+        },
+        borderRadius: { card: "1rem" },
+        boxShadow: { card: "0 8px 28px -12px rgba(26,22,19,.18)", glow: "0 0 0 3px rgba(232,41,28,.14)" },
+        backgroundImage: { promo: "linear-gradient(135deg,#e8291c 0%,#ff7a1a 100%)" },
+      } },
     };
   </script>
 
@@ -35,16 +50,19 @@
 
   <!-- LOGIN -->
   <section id="loginView" class="min-h-screen flex items-center justify-center px-4">
-    <div class="w-full max-w-sm bg-white rounded-2xl shadow-sm p-6">
-      <h1 class="text-xl font-extrabold text-center">Painel da Pizzaria</h1>
+    <div class="w-full max-w-sm card card-pop p-6">
+      <div class="mx-auto w-12 h-12 rounded-xl bg-promo grid place-items-center shadow-lg shadow-brand-600/30 mb-3">
+        <svg viewBox="0 0 24 24" class="w-6 h-6 text-white" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/>
+        </svg>
+      </div>
+      <h1 class="font-display text-xl font-extrabold text-center">Painel da Pizzaria</h1>
       <p class="text-sm text-charcoal-500 text-center mt-1 mb-5">Acesso restrito à equipe.</p>
       <form id="loginForm" class="space-y-3">
-        <input name="email" type="email" required placeholder="E-mail" autocomplete="username"
-          class="w-full rounded-xl border border-charcoal-200 py-3 px-3 text-sm" />
-        <input name="password" type="password" required placeholder="Senha" autocomplete="current-password"
-          class="w-full rounded-xl border border-charcoal-200 py-3 px-3 text-sm" />
+        <input name="email" type="email" required placeholder="E-mail" autocomplete="username" class="field" />
+        <input name="password" type="password" required placeholder="Senha" autocomplete="current-password" class="field" />
         <p id="loginError" class="text-sm text-red-600 min-h-[1.25rem]"></p>
-        <button type="submit" class="w-full h-12 rounded-xl bg-brand-600 text-white font-bold">Entrar</button>
+        <button type="submit" class="btn btn-primary btn-block btn-lg">Entrar</button>
       </form>
     </div>
   </section>
@@ -53,7 +71,7 @@
   <div id="appView" hidden>
     <header class="bg-charcoal-900 text-white sticky top-0 z-40">
       <div class="max-w-2xl mx-auto px-4 h-14 flex items-center justify-between">
-        <h1 class="font-extrabold">🍕 Painel</h1>
+        <h1 class="font-display font-extrabold flex items-center gap-2">🍕 Painel</h1>
         <div class="flex items-center gap-3 text-sm">
           <span id="adminEmail" class="text-charcoal-300 hidden sm:inline"></span>
           <button id="logoutBtn" class="text-charcoal-200 underline">Sair</button>
@@ -64,8 +82,8 @@
     <main class="max-w-2xl mx-auto px-4 py-4 pb-28">
       <!-- Pedidos -->
       <section data-panel="orders">
-        <div class="flex items-center justify-between mb-2">
-          <h2 class="text-lg font-extrabold">Pedidos</h2>
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="font-display text-lg font-extrabold">Pedidos</h2>
         </div>
         <p id="ordersSummary" class="text-xs text-charcoal-500 mb-3"></p>
         <div id="ordersControls" class="flex flex-wrap items-center gap-2 mb-4"></div>
@@ -74,27 +92,27 @@
 
       <!-- Cardápio -->
       <section data-panel="products" hidden>
-        <h2 class="text-lg font-extrabold mb-3">Cardápio</h2>
+        <h2 class="font-display text-lg font-extrabold mb-3">Cardápio</h2>
 
-        <div class="bg-white rounded-2xl p-4 mb-3">
+        <div class="card p-4 mb-3">
           <div class="flex items-center justify-between mb-1">
-            <h3 class="font-bold">Categorias</h3>
+            <h3 class="font-display font-bold">Categorias</h3>
             <button id="addCategoryBtn" class="text-sm font-bold text-brand-600">+ Nova</button>
           </div>
           <div id="categoriesList"></div>
         </div>
 
-        <div class="bg-white rounded-2xl p-4 mb-3">
+        <div class="card p-4 mb-3">
           <div class="flex items-center justify-between mb-1">
-            <h3 class="font-bold">Produtos</h3>
+            <h3 class="font-display font-bold">Produtos</h3>
             <button id="addProductBtn" class="text-sm font-bold text-brand-600">+ Novo</button>
           </div>
           <div id="productsList"></div>
         </div>
 
-        <div class="bg-white rounded-2xl p-4">
+        <div class="card p-4">
           <div class="flex items-center justify-between mb-1">
-            <h3 class="font-bold">Bordas & Adicionais</h3>
+            <h3 class="font-display font-bold">Bordas & Adicionais</h3>
             <button id="addAddonBtn" class="text-sm font-bold text-brand-600">+ Novo</button>
           </div>
           <div id="addonsList"></div>
@@ -103,9 +121,9 @@
 
       <!-- Configurações -->
       <section data-panel="settings" hidden>
-        <h2 class="text-lg font-extrabold mb-3">Configurações</h2>
-        <div id="settingsForm" class="bg-white rounded-2xl p-4"></div>
-        <button id="seedBtn" class="w-full mt-4 h-11 rounded-xl bg-charcoal-100 text-charcoal-600 text-sm font-semibold">
+        <h2 class="font-display text-lg font-extrabold mb-3">Configurações</h2>
+        <div id="settingsForm" class="card p-4"></div>
+        <button id="seedBtn" class="btn btn-outline btn-block mt-4 text-sm">
           Importar cardápio de exemplo
         </button>
       </section>
@@ -113,26 +131,26 @@
       <!-- Cupons -->
       <section data-panel="coupons" hidden>
         <div class="flex items-center justify-between mb-3">
-          <h2 class="text-lg font-extrabold">Cupons</h2>
+          <h2 class="font-display text-lg font-extrabold">Cupons</h2>
           <button id="addCouponBtn" class="text-sm font-bold text-brand-600">+ Novo cupom</button>
         </div>
-        <div id="couponsList" class="bg-white rounded-2xl p-4"></div>
+        <div id="couponsList" class="card p-4"></div>
       </section>
     </main>
 
     <!-- Tab bar -->
     <nav class="fixed bottom-0 inset-x-0 bg-white border-t border-charcoal-200 z-40" style="padding-bottom:env(safe-area-inset-bottom)">
       <div class="max-w-2xl mx-auto grid grid-cols-4">
-        <button data-tab="orders" class="py-2.5 flex flex-col items-center gap-0.5 text-xs font-semibold text-charcoal-400">
+        <button data-tab="orders" class="py-2.5 flex flex-col items-center gap-0.5 text-xs font-bold text-charcoal-400">
           <span class="tab-dot w-1.5 h-1.5 rounded-full bg-transparent"></span>🧾<span>Pedidos</span>
         </button>
-        <button data-tab="products" class="py-2.5 flex flex-col items-center gap-0.5 text-xs font-semibold text-charcoal-400">
+        <button data-tab="products" class="py-2.5 flex flex-col items-center gap-0.5 text-xs font-bold text-charcoal-400">
           <span class="tab-dot w-1.5 h-1.5 rounded-full bg-transparent"></span>🍕<span>Cardápio</span>
         </button>
-        <button data-tab="coupons" class="py-2.5 flex flex-col items-center gap-0.5 text-xs font-semibold text-charcoal-400">
+        <button data-tab="coupons" class="py-2.5 flex flex-col items-center gap-0.5 text-xs font-bold text-charcoal-400">
           <span class="tab-dot w-1.5 h-1.5 rounded-full bg-transparent"></span>🎟️<span>Cupons</span>
         </button>
-        <button data-tab="settings" class="py-2.5 flex flex-col items-center gap-0.5 text-xs font-semibold text-charcoal-400">
+        <button data-tab="settings" class="py-2.5 flex flex-col items-center gap-0.5 text-xs font-bold text-charcoal-400">
           <span class="tab-dot w-1.5 h-1.5 rounded-full bg-transparent"></span>⚙️<span>Config</span>
         </button>
       </div>

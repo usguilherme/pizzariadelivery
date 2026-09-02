@@ -3,15 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#f7f6f4" />
   <title>Página não encontrada</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@700;800&family=Inter:wght@400;500&display=swap" />
+  <style>
+    body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: #f7f6f4; color: #1a1613; font-family: "Inter", system-ui, sans-serif; text-align: center; padding: 0 1rem; }
+    h1 { font-family: "Poppins", system-ui, sans-serif; font-size: 1.6rem; font-weight: 800; margin: .5rem 0 .25rem; }
+    p { color: #6b6259; margin: 0; }
+    a { display: inline-block; margin-top: 1.5rem; padding: .85rem 1.4rem; border-radius: 16px;
+      color: #fff; font-weight: 700; text-decoration: none; font-family: "Poppins", sans-serif;
+      background: linear-gradient(135deg, #e8291c 0%, #ff7a1a 100%);
+      box-shadow: 0 12px 28px -10px rgba(232, 41, 28, .55); }
+  </style>
 </head>
-<body class="bg-neutral-50 min-h-screen flex items-center justify-center px-4 text-center">
+<body>
   <div>
-    <div class="text-6xl mb-3">🍕</div>
-    <h1 class="text-2xl font-extrabold text-neutral-900">Página não encontrada</h1>
-    <p class="text-neutral-500 mt-1">Essa fatia não existe.</p>
-    <a href="/" class="inline-block mt-5 px-5 py-3 rounded-xl text-white font-bold" style="background:#c72c20">Voltar ao cardápio</a>
+    <div style="font-size:3.5rem">🍕</div>
+    <h1>Página não encontrada</h1>
+    <p>Essa fatia não existe.</p>
+    <a href="/">Voltar ao cardápio</a>
   </div>
 </body>
 </html>

@@ -8,9 +8,20 @@ Aplicação web **mobile-first**, rápida e 100% *serverless* sobre **Firebase**
 | `index.html`  | Cliente              | Cardápio digital, montagem de pizza (tamanho, meia a meia, borda, adicionais), carrinho, checkout (entrega/retirada, pagamento, cupom) e envio do pedido pelo **WhatsApp**. Grava o pedido no Firestore. |
 | `admin.html`  | Equipe da pizzaria   | Login (Firebase Auth), **pedidos em tempo real** (`onSnapshot`), troca de status, **impressão térmica 58mm** (Web Bluetooth / ESC-POS), CRUD de cardápio, configuração da loja e cupons. |
 
+## Identidade visual
+
+Tema **light premium** inspirado no repositório de referência `imperioPizzaria`:
+paleta vermelho `#e8291c` + laranja `#ff7a1a` com gradiente promo a 135°, tipografia
+**Poppins** (títulos/preços) + **Inter** (corpo), sombras suaves e “glow”, vitrine
+**mobile-first em grid de 2 colunas com imagem 4:3** (fallback gradiente + inicial quando
+sem foto). O design-system fica em `css/styles.css` (tokens em `:root` + classes de
+componente `.btn`, `.card`, `.field`, `.chip`, `.segmented`, `.badge-promo`, bottom-sheet…),
+complementando as escalas `brand`/`accent`/`charcoal` retunadas no `tailwind.config`.
+
 ## Stack
 
 - **HTML5 + Tailwind CSS (CDN)** + **JavaScript ES6+** (módulos nativos, sem bundler).
+- Fontes via Google Fonts (`Poppins` + `Inter`) com `preconnect`.
 - Firebase SDK 11 carregado via `https://www.gstatic.com/firebasejs/` com **import map**
   (por isso `js/firebase-config.js` usa `from "firebase/app"` sem build step).
 - **Cloud Firestore** para cardápio, configuração, cupons e sincronização de pedidos.
@@ -35,8 +46,11 @@ assets/  (favicon, manifest)
 ## Modelo de dados (Firestore)
 
 - `categories/{id}` — `{ name, order, active, description? }`
-- `products/{id}` — `{ name, description, categoryId, type:'pizza'|'simple', imageUrl,
-  active, order, featured, tags:[], prices:{P,M,G,GG} | price, halfEligible }`
+- `products/{id}` — `{ name, description, serves?, categoryId, type:'pizza'|'simple', imageUrl,
+  active, order, featured, tags:[], prices:{P,M,G,GG} | price, halfEligible,
+  promoActive?, promoPrices:{P,M,G,GG}? | promoPrice? }`
+  Quando `promoActive` e há preço promocional válido (< preço de tabela), a vitrine mostra o
+  valor riscado, o selo `-X%` e destaca o item em **“Promoções da Casa”** + no banner do topo.
 - `addons/{id}` — `{ name, price, group:'borda'|'extra', active, order }`
 - `settings/store` — doc único: identidade, `whatsapp`, PIX, `isOpenManual`, `hours`,
   `minOrder`, `deliveryFees:[{neighborhood,fee}]`, `defaultDeliveryFee`, `pickupEnabled`,
@@ -125,5 +139,6 @@ git push -u origin main
 ```
 
 ---
-🤖 Base construída do zero seguindo a arquitetura especificada (o repositório de referência
-`imperioPizzaria` não estava acessível publicamente).
+🤖 Base construída do zero seguindo a arquitetura especificada. A **identidade visual** foi
+depois refinada a partir do repositório de referência `imperioPizzaria` (Next.js/Vercel —
+apenas o design foi aproveitado; a arquitetura permanece 100% Firebase serverless).

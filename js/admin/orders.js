@@ -5,7 +5,7 @@
 import {
   db, collection, query, orderBy, onSnapshot, doc, updateDoc,
 } from "../firebase-config.js";
-import { $, el, formatBRL, openSheet, toast, confirmSheet, escapeHtml } from "../ui.js";
+import { $, el, formatBRL, openSheet, toast, confirmSheet, escapeHtml, segmented } from "../ui.js";
 import { state, SIZE_LABELS } from "../store.js";
 import { buildOrderMessage, whatsappUrl } from "../whatsapp.js";
 import { printOrder, connectPrinter, isPrinterConnected, bluetoothSupported } from "./printer.js";
@@ -84,31 +84,37 @@ function notifyNew(o) {
 function renderControls() {
   const bar = $("#ordersControls");
   bar.innerHTML = "";
-  const tabs = [["active", "Ativos"], ["done", "Concluídos"], ["canceled", "Cancelados"], ["all", "Todos"]];
-  for (const [val, label] of tabs) {
-    bar.append(el("button", {
-      class: `px-3 py-1.5 rounded-full text-sm font-semibold ${filter === val ? "bg-brand-600 text-white" : "bg-charcoal-100 text-charcoal-600"}`,
-      onclick: () => { filter = val; renderControls(); render(); },
-    }, label));
-  }
-  const btnWrap = el("div", { class: "ml-auto flex gap-2" });
+
+  const filterCtl = segmented(
+    [["active", "Ativos"], ["done", "Concluídos"], ["canceled", "Cancelados"], ["all", "Todos"]],
+    filter,
+    (val) => { filter = val; render(); },
+    { wrap: true },
+  );
+  filterCtl.node.classList.add("flex-1", "min-w-[220px]");
+  bar.append(filterCtl.node);
+
+  const btnWrap = el("div", { class: "flex gap-2" });
   if (bluetoothSupported()) {
     btnWrap.append(el("button", {
-      class: "px-3 py-1.5 rounded-full text-sm font-semibold bg-charcoal-800 text-white",
+      type: "button",
+      class: `btn btn-sm ${isPrinterConnected() ? "btn-success" : "btn-dark"}`,
       onclick: () => connectPrinter().then(renderControls),
     }, isPrinterConnected() ? "🖨️ Conectada" : "🖨️ Conectar"));
   }
-  if (Notification && Notification.permission === "default") {
+  if (typeof Notification !== "undefined" && Notification.permission === "default") {
     btnWrap.append(el("button", {
-      class: "px-3 py-1.5 rounded-full text-sm font-semibold bg-charcoal-100 text-charcoal-600",
+      type: "button",
+      class: "btn btn-outline btn-sm",
       onclick: () => Notification.requestPermission().then(renderControls),
-    }, "🔔 Ativar avisos"));
+    }, "🔔 Avisos"));
   }
   bar.append(btnWrap);
 }
 
 // ---- Render ----------------------------------------------------
 function render() {
+  renderControls();
   const root = $("#ordersRoot");
   const list = orders.filter((o) => {
     if (filter === "all") return true;
@@ -118,12 +124,17 @@ function render() {
     return true;
   });
 
-  // Contadores
+  // Contadores como chips
   const counts = { pending: 0, accepted: 0, preparing: 0, delivering: 0 };
   for (const o of orders) if (counts[o.status] != null) counts[o.status]++;
-  $("#ordersSummary").innerHTML = FLOW.slice(0, 4).map((s) =>
-    `<span class="inline-flex items-center gap-1"><b class="text-charcoal-900">${counts[s]}</b> ${LABELS[s]}</span>`
-  ).join('<span class="text-charcoal-300 mx-2">·</span>');
+  const summary = $("#ordersSummary");
+  summary.innerHTML = "";
+  summary.className = "flex flex-wrap gap-1.5 mb-3";
+  for (const st of FLOW.slice(0, 4)) {
+    summary.append(el("span", {
+      class: `text-[11px] font-bold px-2.5 py-1 rounded-full ${counts[st] ? badgeCls(st) : "bg-charcoal-100 text-charcoal-400"}`,
+    }, `${counts[st]} ${LABELS[st]}`));
+  }
 
   if (!list.length) {
     root.innerHTML = `<p class="text-center text-charcoal-400 py-16 text-sm">Nenhum pedido ${filter === "active" ? "ativo" : ""}.</p>`;
@@ -137,58 +148,53 @@ function render() {
 function orderCard(o) {
   const isNew = o.status === "pending";
   const card = el("div", {
-    class: `rounded-2xl border p-3.5 space-y-2 ${isNew ? "border-brand-300 bg-brand-50 ring-1 ring-brand-200" : "border-charcoal-200 bg-white"}`,
+    class: `relative card ${o.status === "done" || o.status === "canceled" ? "opacity-80" : ""} ${isNew ? "pulse-ring border-brand-300" : ""} p-3.5 pl-4 space-y-2`,
   });
+  card.append(el("span", { class: `status-rail rail-${o.status}` }));
 
   card.append(el("div", { class: "flex items-start justify-between gap-2" }, [
-    el("div", {}, [
-      el("div", { class: "flex items-center gap-2" }, [
-        el("span", { class: "font-extrabold" }, `#${o.code}`),
-        el("span", { class: `text-[11px] font-bold px-2 py-0.5 rounded-full ${badgeCls(o.status)}` }, LABELS[o.status] || o.status),
-        el("span", { class: "text-[11px] px-2 py-0.5 rounded-full bg-charcoal-100 text-charcoal-600" },
+    el("div", { class: "min-w-0" }, [
+      el("div", { class: "flex items-center gap-2 flex-wrap" }, [
+        el("span", { class: "font-display font-extrabold text-lg" }, `#${o.code}`),
+        el("span", { class: `text-[10px] font-extrabold px-2 py-0.5 rounded-full ${badgeCls(o.status)}` }, LABELS[o.status] || o.status),
+        el("span", { class: "text-[10px] font-bold px-2 py-0.5 rounded-full bg-charcoal-100 text-charcoal-600" },
           o.fulfillment === "delivery" ? "🛵 Entrega" : "🏪 Retirada"),
       ]),
-      el("p", { class: "text-sm text-charcoal-600 mt-0.5" }, `${o.customer.name} · ${fmtTime(o.createdAt)}`),
+      el("p", { class: "text-xs text-charcoal-500 mt-0.5" }, `${o.customer.name} · ${fmtTime(o.createdAt)}`),
     ]),
-    el("span", { class: "font-extrabold text-brand-700" }, formatBRL(o.total)),
+    el("span", { class: "font-display font-extrabold text-brand-700 shrink-0" }, formatBRL(o.total)),
   ]));
 
-  // Itens resumidos
-  card.append(el("ul", { class: "text-sm text-charcoal-700 space-y-0.5" },
-    o.items.map((it) => el("li", {}, `${it.qty}x ${it.type === "pizza"
+  card.append(el("ul", { class: "text-[13px] text-charcoal-700 space-y-0.5" },
+    o.items.map((it) => el("li", {}, `${it.qty}× ${it.type === "pizza"
       ? `Pizza ${it.size} ${it.flavors.map((f) => f.name).join("/")}`
       : it.name}${it.border ? ` (borda ${it.border.name})` : ""}`))
   ));
 
-  // Ações
   const actions = el("div", { class: "flex flex-wrap gap-2 pt-1" });
   actions.append(el("button", {
-    class: "text-xs font-semibold px-3 py-1.5 rounded-lg bg-charcoal-100 text-charcoal-700",
-    onclick: () => openDetail(o),
+    type: "button", class: "btn btn-outline btn-sm", onclick: () => openDetail(o),
   }, "Detalhes"));
-
   actions.append(el("button", {
-    class: "text-xs font-semibold px-3 py-1.5 rounded-lg bg-charcoal-100 text-charcoal-700",
-    onclick: () => printOrder(o, state.settings),
-  }, "🖨️ Imprimir"));
-
+    type: "button", class: "btn btn-outline btn-sm", onclick: () => printOrder(o, state.settings),
+  }, "🖨️"));
   actions.append(el("a", {
     href: whatsappUrl(o.customer.phone, `Olá ${o.customer.name}! Sobre seu pedido #${o.code}...`),
     target: "_blank", rel: "noopener",
-    class: "text-xs font-semibold px-3 py-1.5 rounded-lg bg-emerald-100 text-emerald-700",
+    class: "btn btn-sm bg-emerald-100 text-emerald-700",
   }, "WhatsApp"));
 
   const next = nextStatus(o);
   if (next) {
     actions.append(el("button", {
-      class: "text-xs font-bold px-3 py-1.5 rounded-lg bg-brand-600 text-white ml-auto",
+      type: "button", class: "btn btn-primary btn-sm ml-auto",
       onclick: () => setStatus(o, next),
     }, NEXT_LABEL[o.status] || "Avançar"));
   }
   if (o.status !== "canceled" && o.status !== "done") {
     actions.append(el("button", {
-      class: "text-xs font-semibold px-3 py-1.5 rounded-lg text-red-600",
-      onclick: async () => { if (await confirmSheet(`Cancelar o pedido #${o.code}?`, { okText: "Cancelar pedido" })) setStatus(o, "canceled"); },
+      type: "button", class: "btn btn-ghost btn-sm text-red-600",
+      onclick: async () => { if (await confirmSheet(`Cancelar o pedido #${o.code}?`, { danger: true, okText: "Cancelar pedido" })) setStatus(o, "canceled"); },
     }, "Cancelar"));
   }
   card.append(actions);
@@ -225,14 +231,14 @@ function openDetail(o) {
     wrap.append(row("Endereço",
       `${a.street}, ${a.number}${a.complement ? " — " + a.complement : ""} · ${a.district}${a.reference ? " · " + a.reference : ""}`));
   }
-  wrap.append(el("hr", { class: "border-charcoal-100" }));
+  wrap.append(el("hr", { class: "divider" }));
   for (const it of o.items) {
-    wrap.append(el("div", { class: "flex justify-between" }, [
-      el("span", {}, `${it.qty}x ${it.type === "pizza" ? `Pizza ${it.size} (${SIZE_LABELS[it.size]}) — ${it.flavors.map((f) => f.name).join(" / ")}` : it.name}${it.border ? ` + borda ${it.border.name}` : ""}${it.extras?.length ? " + " + it.extras.map((e) => e.name).join(", ") : ""}${it.notes ? ` · ${it.notes}` : ""}`),
-      el("span", { class: "font-semibold shrink-0 ml-2" }, formatBRL(it.lineTotal)),
+    wrap.append(el("div", { class: "flex justify-between gap-2" }, [
+      el("span", {}, `${it.qty}× ${it.type === "pizza" ? `Pizza ${it.size} (${SIZE_LABELS[it.size]}) — ${it.flavors.map((f) => f.name).join(" / ")}` : it.name}${it.border ? ` + borda ${it.border.name}` : ""}${it.extras?.length ? " + " + it.extras.map((e) => e.name).join(", ") : ""}${it.notes ? ` · ${it.notes}` : ""}`),
+      el("span", { class: "font-semibold shrink-0" }, formatBRL(it.lineTotal)),
     ]));
   }
-  wrap.append(el("hr", { class: "border-charcoal-100" }));
+  wrap.append(el("hr", { class: "divider" }));
   wrap.append(
     row("Subtotal", formatBRL(o.subtotal)),
     o.discount > 0 ? row("Desconto" + (o.couponCode ? ` (${o.couponCode})` : ""), "-" + formatBRL(o.discount)) : null,
@@ -243,11 +249,11 @@ function openDetail(o) {
   );
 
   wrap.append(el("div", { class: "flex gap-2 pt-2" }, [
-    el("button", { class: "flex-1 py-2.5 rounded-xl bg-charcoal-100 font-semibold", onclick: () => printOrder(o, s) }, "🖨️ Imprimir"),
+    el("button", { type: "button", class: "btn btn-outline flex-1", onclick: () => printOrder(o, s) }, "🖨️ Imprimir"),
     el("a", {
       href: whatsappUrl(s.whatsapp, buildOrderMessage(o, s)),
       target: "_blank", rel: "noopener",
-      class: "flex-1 py-2.5 rounded-xl bg-emerald-600 text-white font-semibold text-center",
+      class: "btn btn-success flex-1",
     }, "Reenviar resumo"),
   ]));
 

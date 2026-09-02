@@ -46,7 +46,7 @@ function editCoupon(c = null) {
   const active = toggle("Cupom ativo", c ? c.active !== false : true);
 
   f.append(code.node, type.node, value.node, minOrder.node, limit.node, expires.node, active.node,
-    el("button", { type: "submit", class: "w-full h-12 rounded-xl bg-brand-600 text-white font-bold" }, "Salvar"));
+    el("button", { type: "submit", class: "btn btn-primary btn-block" }, "Salvar"));
 
   f.onsubmit = async (e) => {
     e.preventDefault();
@@ -82,21 +82,21 @@ async function remove(c) {
 
 // helpers
 function input(label, value, attrs = {}) {
-  const inp = el("input", { class: "w-full rounded-xl border border-charcoal-200 py-2.5 px-3 text-sm disabled:bg-charcoal-50", value: value ?? "", ...attrs });
+  const inp = el("input", { class: "field", value: value ?? "", ...attrs });
   return { node: wrap(label, inp), value: () => inp.value };
 }
 function selectField(label, opts, selected) {
-  const sel = el("select", { class: "w-full rounded-xl border border-charcoal-200 py-2.5 px-3 text-sm bg-white" });
+  const sel = el("select", { class: "field" });
   for (const [v, l] of opts) { const o = el("option", { value: v }, l); if (v === selected) o.selected = true; sel.append(o); }
   return { node: wrap(label, sel), value: () => sel.value };
 }
 function toggle(label, checked) {
-  const inp = el("input", { type: "checkbox", class: "w-5 h-5 accent-brand-600" });
+  const inp = el("input", { type: "checkbox", class: "switch" });
   inp.checked = !!checked;
-  return { node: el("label", { class: "flex items-center justify-between py-1" }, [el("span", { class: "text-sm text-charcoal-700" }, label), inp]), value: () => inp.checked };
+  return { node: el("label", { class: "toggle-row cursor-pointer" }, [el("span", {}, label), inp]), value: () => inp.checked };
 }
 function wrap(label, control) {
-  return el("label", { class: "block" }, [el("span", { class: "text-xs font-semibold text-charcoal-500 mb-1 block" }, label), control]);
+  return el("label", { class: "block" }, [el("span", { class: "field-label" }, label), control]);
 }
 function fmtDate(ts) {
   const d = ts?.toDate ? ts.toDate() : new Date(ts);

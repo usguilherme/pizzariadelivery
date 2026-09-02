@@ -3,12 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
-  <meta name="theme-color" content="#e23b2e" />
+  <meta name="theme-color" content="#f7f6f4" />
   <title>Cardápio · Pizzaria Delivery</title>
   <meta name="description" content="Peça sua pizza online — cardápio digital rápido e direto pelo WhatsApp." />
 
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
   <link rel="manifest" href="assets/manifest.webmanifest" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" />
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
@@ -17,16 +22,29 @@
         extend: {
           colors: {
             brand: {
-              50: "#fef2f1", 100: "#fde0dd", 200: "#fbc4bf", 300: "#f79a91",
-              400: "#f16457", 500: "#e23b2e", 600: "#c72c20", 700: "#a5231a",
-              800: "#88211a", 900: "#71211c",
+              50: "#fdecea", 100: "#fbd5d0", 200: "#f6aba2", 300: "#f07e70",
+              400: "#ee5647", 500: "#e8291c", 600: "#d0231a", 700: "#c71f14",
+              800: "#a21910", 900: "#7e140c",
+            },
+            accent: {
+              50: "#fff1e5", 100: "#ffe1c7", 400: "#ff9040", 500: "#ff7a1a", 600: "#e86a0f",
             },
             charcoal: {
-              50: "#f7f7f8", 100: "#eeeef0", 200: "#d9d9de", 300: "#b8b8c0",
-              400: "#8f8f9c", 500: "#6f6f7e", 600: "#565664", 700: "#434350",
-              800: "#2c2c37", 900: "#18181b",
+              50: "#f7f6f4", 100: "#f1efec", 200: "#e9e5df", 300: "#d6cfc5",
+              400: "#9c9389", 500: "#6b6259", 600: "#544c44", 700: "#3d372f",
+              800: "#2a251f", 900: "#1a1613",
             },
           },
+          fontFamily: {
+            sans: ["Inter", "ui-sans-serif", "system-ui", "sans-serif"],
+            display: ["Poppins", "ui-sans-serif", "system-ui", "sans-serif"],
+          },
+          borderRadius: { card: "1rem" },
+          boxShadow: {
+            card: "0 8px 28px -12px rgba(26,22,19,.18)",
+            glow: "0 0 0 3px rgba(232,41,28,.14)",
+          },
+          backgroundImage: { promo: "linear-gradient(135deg,#e8291c 0%,#ff7a1a 100%)" },
         },
       },
     };
@@ -47,20 +65,35 @@
 <body class="bg-charcoal-50 text-charcoal-900 min-h-screen">
 
   <!-- Header -->
-  <header class="bg-white sticky top-0 z-40 shadow-sm">
+  <header class="sticky top-0 z-40 bg-white/85 backdrop-blur-md border-b border-charcoal-200">
     <div class="max-w-lg mx-auto px-4 pt-3 pb-2">
-      <div class="flex items-start justify-between gap-3">
-        <div class="min-w-0">
-          <h1 id="storeName" class="text-lg font-extrabold truncate">Pizzaria Delivery</h1>
-          <p id="storeAddress" class="text-xs text-charcoal-500 truncate"></p>
+      <div class="flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="shrink-0 w-9 h-9 rounded-xl bg-promo grid place-items-center shadow-md shadow-brand-600/30">
+            <svg viewBox="0 0 24 24" class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2 2 7l10 5 10-5-10-5Z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/>
+            </svg>
+          </span>
+          <div class="min-w-0">
+            <h1 id="storeName" class="font-display text-base font-extrabold leading-tight truncate">Pizzaria Delivery</h1>
+            <p id="storeAddress" class="text-[11px] text-charcoal-500 truncate leading-tight"></p>
+          </div>
         </div>
-        <span id="storeStatus" class="text-xs font-semibold px-2.5 py-1 rounded-full bg-charcoal-100 text-charcoal-500 shrink-0">carregando…</span>
+        <div class="flex items-center gap-2 shrink-0">
+          <span id="storeStatus" class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-charcoal-100 text-charcoal-500">carregando…</span>
+          <button id="cartIconBtn" aria-label="Ver pedido" class="relative w-10 h-10 grid place-items-center rounded-xl bg-charcoal-100 text-charcoal-700 active:scale-95 transition">
+            <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>
+            </svg>
+            <span id="cartIconCount" class="hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-brand-500 text-white text-[10px] font-extrabold grid place-items-center">0</span>
+          </button>
+        </div>
       </div>
-      <p id="storeEta" class="text-[11px] text-charcoal-400 mt-0.5"></p>
+      <p id="storeEta" class="text-[11px] text-charcoal-400 mt-1"></p>
 
       <div class="mt-2.5 relative">
         <input id="search" type="search" placeholder="Buscar no cardápio…" enterkeyhint="search"
-          class="w-full bg-charcoal-100 rounded-xl py-2.5 pl-9 pr-3 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-brand-200" />
+          class="w-full bg-charcoal-100 rounded-xl py-2.5 pl-9 pr-3 text-sm outline-none focus:bg-white focus:ring-2 focus:ring-brand-200 transition" />
         <svg class="w-4 h-4 absolute left-3 top-3 text-charcoal-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
       </div>
     </div>
@@ -68,21 +101,29 @@
     <nav id="catNav" class="cat-scroll max-w-lg mx-auto px-4 pb-2.5 flex gap-2 overflow-x-auto"></nav>
   </header>
 
+  <!-- Banner promocional (preenchido via JS; oculto se vazio) -->
+  <div id="promoBanner" class="max-w-lg mx-auto px-4 pt-3" hidden></div>
+
   <!-- Cardápio -->
-  <main id="menu" class="max-w-lg mx-auto px-4 pb-32"></main>
+  <main id="menu" class="max-w-lg mx-auto px-4 pb-32 pt-3"></main>
 
   <!-- Barra de carrinho flutuante -->
   <div id="cartBar" class="fixed bottom-0 inset-x-0 z-40 translate-y-24 pointer-events-none">
     <div class="max-w-lg mx-auto px-4">
-      <button class="pointer-events-auto w-full bg-brand-600 text-white rounded-2xl shadow-lg shadow-brand-600/30 h-14 px-5 flex items-center justify-between font-bold">
-        <span id="cartBarCount">0 itens</span>
-        <span class="flex items-center gap-2">Ver pedido <span id="cartBarTotal">R$ 0,00</span> ›</span>
+      <button class="cart-bar-btn pointer-events-auto">
+        <span class="flex items-center gap-2">
+          <span class="w-7 h-7 rounded-full bg-white/20 grid place-items-center text-sm" id="cartBarCount">0</span>
+          <span class="text-sm opacity-90">ver pedido</span>
+        </span>
+        <span class="flex items-center gap-1.5"><span id="cartBarTotal">R$ 0,00</span>
+          <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </span>
       </button>
     </div>
   </div>
 
   <footer class="max-w-lg mx-auto px-4 py-8 text-center text-[11px] text-charcoal-400">
-    Feito com 🍕 · Pedidos via WhatsApp · <a href="/admin" class="underline">Painel</a>
+    Feito com 🍕 · Pedidos via WhatsApp · <a href="/admin" class="underline font-semibold">Painel</a>
   </footer>
 
   <div id="print-receipt" aria-hidden="true"></div>

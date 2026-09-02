@@ -14,16 +14,34 @@ const CATEGORIES = [
 ];
 
 const P = (base) => ({ P: base, M: base + 12, G: base + 24, GG: base + 36 });
+const IMG = (id) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=600&q=70`;
 
 const PRODUCTS = [
-  { id: "mussarela", name: "Mussarela", categoryId: "pizzas-salgadas", type: "pizza", halfEligible: true, featured: true, order: 1, description: "Molho, mussarela e orégano.", prices: P(35) },
-  { id: "calabresa", name: "Calabresa", categoryId: "pizzas-salgadas", type: "pizza", halfEligible: true, featured: true, order: 2, description: "Calabresa fatiada, cebola e mussarela.", prices: P(38) },
-  { id: "portuguesa", name: "Portuguesa", categoryId: "pizzas-salgadas", type: "pizza", halfEligible: true, order: 3, description: "Presunto, ovo, cebola, ervilha e mussarela.", prices: P(42) },
-  { id: "frango-catupiry", name: "Frango c/ Catupiry", categoryId: "pizzas-salgadas", type: "pizza", halfEligible: true, order: 4, description: "Frango desfiado e catupiry.", prices: P(44), tags: ["promo"] },
-  { id: "quatro-queijos", name: "Quatro Queijos", categoryId: "pizzas-salgadas", type: "pizza", halfEligible: true, order: 5, description: "Mussarela, provolone, parmesão e catupiry.", prices: P(46) },
-  { id: "chocolate", name: "Chocolate", categoryId: "pizzas-doces", type: "pizza", halfEligible: true, order: 1, description: "Chocolate ao leite derretido.", prices: P(38) },
-  { id: "romeu-julieta", name: "Romeu e Julieta", categoryId: "pizzas-doces", type: "pizza", halfEligible: true, order: 2, description: "Goiabada com mussarela.", prices: P(40) },
-  { id: "coca-2l", name: "Coca-Cola 2L", categoryId: "bebidas", type: "simple", order: 1, price: 14 },
+  { id: "mussarela", name: "Mussarela", categoryId: "pizzas-salgadas", type: "pizza", halfEligible: true, featured: true, order: 1,
+    description: "Molho de tomate, mussarela e orégano.", serves: "Serve 2–3", prices: P(35),
+    imageUrl: IMG("1574071318508-1cdbab80d002") },
+  { id: "calabresa", name: "Calabresa", categoryId: "pizzas-salgadas", type: "pizza", halfEligible: true, featured: true, order: 2,
+    description: "Calabresa fatiada, cebola e mussarela.", serves: "Serve 2–3", prices: P(38),
+    imageUrl: IMG("1565299624946-b28f40a0ae38"),
+    promoActive: true, promoPrices: { P: 30, M: 40, G: 49, GG: 59 } },
+  { id: "portuguesa", name: "Portuguesa", categoryId: "pizzas-salgadas", type: "pizza", halfEligible: true, order: 3,
+    description: "Presunto, ovo, cebola, ervilha e mussarela.", serves: "Serve 3–4", prices: P(42),
+    imageUrl: IMG("1513104890138-7c749659a591") },
+  { id: "frango-catupiry", name: "Frango c/ Catupiry", categoryId: "pizzas-salgadas", type: "pizza", halfEligible: true, order: 4,
+    description: "Frango desfiado e catupiry cremoso.", serves: "Serve 3–4", prices: P(44),
+    imageUrl: IMG("1571407970349-bc81e7e96d47"),
+    promoActive: true, promoPrices: { P: 36, M: 46, G: 55, GG: 65 } },
+  { id: "quatro-queijos", name: "Quatro Queijos", categoryId: "pizzas-salgadas", type: "pizza", halfEligible: true, order: 5,
+    description: "Mussarela, provolone, parmesão e catupiry.", serves: "Serve 3–4", prices: P(46),
+    imageUrl: IMG("1548369937-47519962c11a") },
+  { id: "chocolate", name: "Chocolate", categoryId: "pizzas-doces", type: "pizza", halfEligible: true, order: 1,
+    description: "Chocolate ao leite derretido com granulado.", serves: "Serve 2–3", prices: P(38),
+    imageUrl: IMG("1541745537411-b8046dc6d66c") },
+  { id: "romeu-julieta", name: "Romeu e Julieta", categoryId: "pizzas-doces", type: "pizza", halfEligible: true, order: 2,
+    description: "Goiabada cremosa com mussarela.", serves: "Serve 2–3", prices: P(40),
+    imageUrl: IMG("1600891964092-4316c288032e") },
+  { id: "coca-2l", name: "Coca-Cola 2L", categoryId: "bebidas", type: "simple", order: 1, price: 14,
+    imageUrl: IMG("1554866585-cd94860890b7"), promoActive: true, promoPrice: 11.9 },
   { id: "guarana-2l", name: "Guaraná 2L", categoryId: "bebidas", type: "simple", order: 2, price: 12 },
   { id: "agua-500", name: "Água 500ml", categoryId: "bebidas", type: "simple", order: 3, price: 4 },
 ];
