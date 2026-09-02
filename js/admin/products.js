@@ -4,6 +4,7 @@
 
 import {
   db, collection, doc, addDoc, setDoc, deleteDoc, onSnapshot,
+  storage, storageRef, uploadBytes, getDownloadURL,
 } from "../firebase-config.js";
 import { $, el, openSheet, toast, confirmSheet, formatBRL, parseMoney } from "../ui.js";
 import { SIZES, SIZE_LABELS } from "../store.js";
@@ -130,7 +131,7 @@ function editProduct(p = null) {
   const type = select("Tipo", [["pizza", "Pizza (com tamanhos)"], ["simple", "Simples (preço único)"]], p?.type || "pizza");
   const desc = textarea("Descrição", p?.description || "");
   const serves = input("Serve quantas pessoas? (opcional)", p?.serves || "", { placeholder: "Ex.: Serve 2–3" });
-  const img = input("URL da imagem (opcional)", p?.imageUrl || "");
+  const img = fileImage("Imagem do produto (opcional)", p?.imageUrl || "");
   const order = input("Ordem", p?.order ?? 99, { type: "number" });
 
   // Preços de tabela
@@ -183,7 +184,7 @@ function editProduct(p = null) {
     const data = {
       name: name.value(), categoryId: cat.value(), type: type.value(),
       description: desc.value(), serves: serves.value().trim(),
-      imageUrl: img.value(), order: Number(order.value()) || 99,
+      order: Number(order.value()) || 99,
       featured: featured.value(), active: active.value(),
       promoActive: promoActive.value(),
       tags: promoActive.value() ? ["promo"] : [],
@@ -204,6 +205,17 @@ function editProduct(p = null) {
       data.promoPrices = null;
       if (!data.price) return toast("Informe o preço.", "warn");
     }
+
+    // Faz o upload da imagem (se houver arquivo novo) e usa a URL gerada.
+    const btn = f.querySelector("button[type=submit]");
+    btn.disabled = true;
+    try {
+      data.imageUrl = await img.resolve();
+    } catch {
+      btn.disabled = false;
+      return toast("Falha ao enviar a imagem. Tente novamente.", "error");
+    }
+
     await save("products", p?.id, data);
     sheet.close();
   };
@@ -245,6 +257,58 @@ function input(label, value, attrs = {}) {
   const inp = el("input", { class: "field", value: value ?? "", ...attrs });
   return { node: wrapField(label, inp), value: () => inp.value, input: inp };
 }
+/**
+ * Campo de upload de imagem para o Firebase Storage.
+ * - `change`: mostra um preview local imediato.
+ * - `resolve()`: chamado no submit — se houver arquivo novo, faz `uploadBytes`
+ *   em `produtos/${Date.now()}_${nome}` e devolve a `getDownloadURL`.
+ *   Sem arquivo novo, mantém a URL atual do produto.
+ */
+function fileImage(label, currentUrl = "") {
+  const inp = el("input", { type: "file", id: "imageUpload", accept: "image/*", class: "field" });
+  const status = el("p", { class: "text-xs text-charcoal-400 mt-1", hidden: true });
+  const preview = el("img", {
+    class: "mt-2 rounded-lg max-h-32 w-auto object-cover border border-charcoal-200",
+    hidden: !currentUrl, alt: "Pré-visualização",
+  });
+  if (currentUrl) preview.src = currentUrl;
+
+  inp.addEventListener("change", () => {
+    const file = inp.files?.[0];
+    status.hidden = true;
+    if (!file) return;
+    preview.src = URL.createObjectURL(file);
+    preview.hidden = false;
+  });
+
+  async function resolve() {
+    const file = inp.files?.[0];
+    if (!file) return currentUrl;
+
+    status.hidden = false;
+    status.textContent = "⏳ Enviando imagem…";
+    status.className = "text-xs text-brand-600 font-semibold mt-1";
+    try {
+      const safeName = file.name.replace(/[^\w.\-]+/g, "_");
+      const path = `produtos/${Date.now()}_${safeName}`;
+      const snap = await uploadBytes(storageRef(storage, path), file, { contentType: file.type });
+      const url = await getDownloadURL(snap.ref);
+      status.textContent = "✅ Imagem enviada.";
+      status.className = "text-xs text-green-600 font-semibold mt-1";
+      return url;
+    } catch (err) {
+      console.error("[storage] upload falhou:", err);
+      status.textContent = "❌ Não foi possível enviar a imagem.";
+      status.className = "text-xs text-red-600 font-semibold mt-1";
+      throw err;
+    }
+  }
+
+  const node = wrapField(label, inp);
+  node.append(status, preview);
+  return { node, resolve };
+}
+
 function textarea(label, value) {
   const inp = el("textarea", { class: "field", rows: "2" }, value || "");
   inp.value = value || "";

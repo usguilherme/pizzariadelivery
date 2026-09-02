@@ -1,0 +1,21 @@
+rules_version = '2';
+
+// Regras do Firebase Storage — Pizzaria Delivery
+// Imagens do cardápio: leitura pública; upload apenas para admins autenticados,
+// limitado a arquivos de imagem de até 5 MB.
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    match /produtos/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    // Qualquer outro caminho é negado por padrão.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

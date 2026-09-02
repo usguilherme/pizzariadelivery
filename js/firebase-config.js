@@ -1,10 +1,11 @@
 // ============================================================================
 // Módulo central de configuração do Firebase — Pizzaria Delivery
 // ============================================================================
-// As sintaxes `from "firebase/app"` / `from "firebase/firestore"` funcionam no
-// navegador (sem bundler) graças ao <script type="importmap"> presente em
-// index.html e admin.html, que mapeia esses specifiers para os módulos ESM
-// hospedados em https://www.gstatic.com/firebasejs/.
+// As sintaxes `from "firebase/app"` / `from "firebase/firestore"` /
+// `from "firebase/storage"` funcionam no navegador (sem bundler) graças ao
+// <script type="importmap"> presente em index.html e admin.html, que mapeia
+// esses specifiers para os módulos ESM hospedados em
+// https://www.gstatic.com/firebasejs/.
 // ----------------------------------------------------------------------------
 
 import { initializeApp } from "firebase/app";
@@ -33,6 +34,14 @@ import {
   signOut,
   connectAuthEmulator,
 } from "firebase/auth";
+import {
+  getStorage,
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+  connectStorageEmulator,
+} from "firebase/storage";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -48,6 +57,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+export const storage = getStorage(app);
 
 // Conecta aos emuladores locais quando rodando em localhost com ?emu=1
 // (ou automaticamente nas portas padrão do Firebase Hosting emulator).
@@ -56,6 +66,7 @@ if (isLocal && (location.port === "5000" || new URLSearchParams(location.search)
   try {
     connectFirestoreEmulator(db, "127.0.0.1", 8080);
     connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
+    connectStorageEmulator(storage, "127.0.0.1", 9199);
     console.info("[firebase] Conectado aos emuladores locais.");
   } catch (e) {
     console.warn("[firebase] Falha ao conectar emuladores:", e);
@@ -81,4 +92,8 @@ export {
   onAuthStateChanged,
   signInWithEmailAndPassword,
   signOut,
+  storageRef,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
 };
